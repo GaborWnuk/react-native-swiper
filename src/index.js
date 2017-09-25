@@ -356,57 +356,59 @@ export default class extends Component {
    * @param  {string} dir    'x' || 'y'
    */
   updateIndex = (offset, dir, cb) => {
-    const state = this.state
-    let index = state.index
-    const diff = offset[dir] - this.internals.offset[dir]
-    const step = dir === 'x' ? state.width : state.height
-    let loopJump = false
+    if(this.internals.offset){
+      const state = this.state
+      let index = state.index
+      const diff = offset[dir] - this.internals.offset[dir]
+      const step = dir === 'x' ? state.width : state.height
+      let loopJump = false
 
-    // Do nothing if offset no change.
-    if (!diff) return
+      // Do nothing if offset no change.
+      if (!diff) return
 
-    // Note: if touch very very quickly and continuous,
-    // the variation of `index` more than 1.
-    // parseInt() ensures it's always an integer
-    index = parseInt(index + Math.round(diff / step))
+      // Note: if touch very very quickly and continuous,
+      // the variation of `index` more than 1.
+      // parseInt() ensures it's always an integer
+      index = parseInt(index + Math.round(diff / step))
 
-    if (this.props.loop) {
-      if (index <= -1) {
-        index = state.total - 1
-        offset[dir] = step * state.total
-        loopJump = true
-      } else if (index >= state.total) {
-        index = 0
-        offset[dir] = step
-        loopJump = true
+      if (this.props.loop) {
+        if (index <= -1) {
+          index = state.total - 1
+          offset[dir] = step * state.total
+          loopJump = true
+        } else if (index >= state.total) {
+          index = 0
+          offset[dir] = step
+          loopJump = true
+        }
       }
-    }
 
-    const newState = {}
-    newState.index = index
-    newState.loopJump = loopJump
+      const newState = {}
+      newState.index = index
+      newState.loopJump = loopJump
 
-    this.internals.offset = offset
+      this.internals.offset = offset
 
-    // only update offset in state if loopJump is true
-    if (loopJump) {
-      // when swiping to the beginning of a looping set for the third time,
-      // the new offset will be the same as the last one set in state.
-      // Setting the offset to the same thing will not do anything,
-      // so we increment it by 1 then immediately set it to what it should be,
-      // after render.
-      if (offset[dir] === this.internals.offset[dir]) {
-        newState.offset = { x: 0, y: 0 }
-        newState.offset[dir] = offset[dir] + 1
-        this.setState(newState, () => {
-          this.setState({ offset: offset }, cb)
-        })
+      // only update offset in state if loopJump is true
+      if (loopJump) {
+        // when swiping to the beginning of a looping set for the third time,
+        // the new offset will be the same as the last one set in state.
+        // Setting the offset to the same thing will not do anything,
+        // so we increment it by 1 then immediately set it to what it should be,
+        // after render.
+        if (offset[dir] === this.internals.offset[dir]) {
+          newState.offset = { x: 0, y: 0 }
+          newState.offset[dir] = offset[dir] + 1
+          this.setState(newState, () => {
+            this.setState({ offset: offset }, cb)
+          })
+        } else {
+          newState.offset = offset
+          this.setState(newState, cb)
+        }
       } else {
-        newState.offset = offset
         this.setState(newState, cb)
       }
-    } else {
-      this.setState(newState, cb)
     }
   }
 
